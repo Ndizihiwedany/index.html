@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Dashboard</title>
+<link rel="icon" href="c:\Users\PC\Downloads\dan img.png">
+
+<style>
+:root{
+  --main:#4e73df;
+  --green:#1cc88a;
+  --red:#e74a3b;
+  --orange:#f39c12;
+  --dark:#2c3e50;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Segoe UI,Arial;
+  background:linear-gradient(135deg,#4e73df,#1cc88a);
+  min-height:100vh;
+}
+
+
+.login{
+  max-width:420px;
+  margin:90px auto;
+  background:#fff;
+  padding:35px;
+  border-radius:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.25);
+  text-align:center;
+}
+.login input{
+  width:80%;
+  padding:10px;
+  margin:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+.login button{
+  padding:10px 18px;
+  border:none;
+  border-radius:10px;
+  background:var(--main);
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+
+#dashboard{display:none}
+
+.top{
+  background:#fff;
+  padding:18px 25px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
+}
+.top h2{color:var(--main)}
+
+.top button{
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+.logout{background:var(--red);color:#fff}
+.confirm{background:var(--green);color:#fff}
+.reset{background:var(--orange);color:#fff}
+
+
+.container{
+  max-width:1100px;
+  margin:30px auto;
+  background:#fff;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 25px 50px rgba(0,0,0,.25);
+}
+
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+th{
+  background:var(--main);
+  color:#fff;
+  padding:14px;
+}
+td{
+  padding:12px;
+  border-bottom:1px solid #eee;
+  text-align:center;
+}
+
+.grade-A{color:var(--green);font-weight:bold}
+.grade-B{color:#3498db;font-weight:bold}
+.grade-C{color:var(--orange);font-weight:bold}
+.grade-D{color:#8e44ad;font-weight:bold}
+.grade-F{color:var(--red);font-weight:bold}
+
+.edit{
+  background:var(--main);
+  color:#fff;
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+
+.average{
+  margin-top:25px;
+  padding:22px;
+  background:var(--green);
+  color:#fff;
+  font-size:22px;
+  border-radius:16px;
+  text-align:center;
+}
+
+
+.settings{
+  margin-top:35px;
+  padding:25px;
+  border-radius:18px;
+  background:#f8f9fc;
+  border:2px solid var(--main);
+}
+.settings h3{color:var(--main)}
+.settings input{
+  padding:8px;
+  margin:4px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+.settings button{
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  background:var(--main);
+  color:#fff;
+  cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+
+<div id="loginBox" class="login">
+  <h2>🔐 Student Login</h2>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+  <br><br>
+  <button onclick="login()">Login</button>
+  <p id="msg" style="color:red"></p>
+</div>
+
+
+<div id="dashboard">
+
+<div class="top">
+  <h2>📘 Student Marks Dashboard <span id="lockIcon"></span></h2>
+  <div>
+    <button class="confirm" onclick="confirmMarks()">Confirm</button>
+    <button class="reset" onclick="resetMarks()">Reset</button>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="container">
+
+<table>
+<thead>
+<tr>
+  <th>Subject</th>
+  <th>Marks (%)</th>
+  <th>Grade</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<div class="average">
+Average: <span id="avg">0</span>% | Grade:
+<span id="avgGrade">F</span>
+</div>
+
+
+<div class="settings">
+<h3>⚙️ Subjects Settings</h3>
+<div id="subjectList"></div>
+<input id="newSubject" placeholder="New Subject">
+<button onclick="addSubject()">Add</button>
+</div>
+
+<div class="settings">
+<h3>👤 Account Settings</h3>
+<input id="newUser" placeholder="New Username">
+<input id="newPass" placeholder="New Password">
+<button onclick="updateAccount()">Update Account</button>
+</div>
+
+</div>
+</div>
+
+<script>
+
+let account = JSON.parse(localStorage.getItem("account")) || {
+  username:"dany",
+  password:"0340"
+};
+localStorage.setItem("account",JSON.stringify(account));
+
+let locked = localStorage.getItem("locked")==="yes";
+let data = JSON.parse(localStorage.getItem("marks")) || [
+  {subject:"Mathematics",mark:""},
+  {subject:"English",mark:""},
+  {subject:"Physics",mark:""}
+];
+
+function login(){
+  if(user.value===account.username && pass.value===account.password){
+    sessionStorage.setItem("logged","yes");
+    loginBox.style.display="none";
+    dashboard.style.display="block";
+    draw();
+  }else msg.innerText="Wrong login ❌";
+}
+if(sessionStorage.getItem("logged")==="yes"){
+  loginBox.style.display="none";
+  dashboard.style.display="block";
+}
+
+
+function logout(){
+  sessionStorage.clear();
+  location.reload();
+}
+
+
+function getGrade(m){
+  if(m>=90)return"A";
+  if(m>=80)return"B";
+  if(m>=70)return"C";
+  if(m>=60)return"D";
+  return"F";
+}
+
+
+function draw(){
+  tableBody.innerHTML="";
+  let total=0,count=0;
+
+  data.forEach(d=>{
+    let g=d.mark!==""?getGrade(d.mark):"-";
+    tableBody.innerHTML+=`
+    <tr>
+      <td>${d.subject}</td>
+      <td>${d.mark||"-"}</td>
+      <td class="grade-${g}">${g}</td>
+      <td><button class="edit" onclick="editMark('${d.subject}')">Edit</button></td>
+    </tr>`;
+    if(d.mark!==""){total+=+d.mark;count++}
+  });
+
+  let a=count?(total/count).toFixed(1):0;
+  avg.innerText=a;
+  avgGrade.innerText=getGrade(a);
+  lockIcon.innerText=locked?"🔒":"";
+
+  localStorage.setItem("marks",JSON.stringify(data));
+  drawSubjects();
+}
+
+function editMark(sub){
+  if(locked) return alert("Marks confirmed ❌");
+  let i=data.findIndex(d=>d.subject===sub);
+  let m=prompt("Enter marks (0-100):",data[i].mark);
+  if(m!==null && m>=0 && m<=100){
+    data[i].mark=Number(m);
+    draw();
+  }
+}
+
+function confirmMarks(){
+  if(confirm("Confirm marks?")){
+    locked=true;
+    localStorage.setItem("locked","yes");
+    draw();
+  }
+}
+function resetMarks(){
+  if(confirm("Reset all marks?")){
+    locked=false;
+    localStorage.setItem("locked","no");
+    data.forEach(d=>d.mark="");
+    draw();
+  }
+}
+
+
+function drawSubjects(){
+  subjectList.innerHTML="";
+  data.forEach((d,i)=>{
+    subjectList.innerHTML+=`
+      <div>
+        <input value="${d.subject}" id="s${i}">
+        <button onclick="updateSubject(${i})">Update</button>
+        <button onclick="deleteSubject(${i})">Delete</button>
+      </div>`;
+  });
+}
+function updateSubject(i){
+  data[i].subject=document.getElementById("s"+i).value;
+  draw();
+}
+function deleteSubject(i){
+  data.splice(i,1);
+  draw();
+}
+function addSubject(){
+  if(newSubject.value.trim()){
+    data.push({subject:newSubject.value.trim(),mark:""});
+    newSubject.value="";
+    draw();
+  }
+}
+
+
+function updateAccount(){
+  if(newUser.value) account.username=newUser.value;
+  if(newPass.value) account.password=newPass.value;
+  localStorage.setItem("account",JSON.stringify(account));
+  alert("Account updated ✅");
+}
+</script>
+
+</body>
+</html>
